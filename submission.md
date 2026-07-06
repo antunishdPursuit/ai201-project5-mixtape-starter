@@ -94,4 +94,36 @@ The repository README provides these titles and affected services. Selection rem
 
 ## Bug Investigations
 
-RCA entries will be added here only after each selected bug is reproduced before its fix.
+### Issue 1: My Listening Streak Keeps Resetting
+
+#### How I Reproduced It
+
+I ran only the existing Sunday-boundary regression test against the untouched starter code:
+
+```powershell
+python -m pytest tests/test_streaks.py::test_streak_increments_on_sunday -v
+```
+
+The test creates a user, records activity at noon UTC on Saturday, June 15, 2024, and then records activity at noon UTC on Sunday, June 16, 2024. The Saturday update correctly sets the streak to `1`. After the consecutive Sunday update, the expected streak is `2`, but the actual streak remains `1`, so the test fails at `tests/test_streaks.py:96`.
+
+I also called `update_listening_streak()` directly with the same controlled dates. The output confirmed the behavior independently of the pytest assertion:
+
+```text
+After Saturday: 1
+After Sunday:   1
+Expected Sunday: 2
+```
+
+This confirms the bug is conditional on the Saturday-to-Sunday transition and existed before any project code was changed.
+
+#### How I Found the Root Cause
+
+Pending investigation after Milestone 2 reproduction is complete.
+
+#### Root Cause
+
+Pending investigation. No diagnosis is recorded yet so reproduction remains separate from fixing.
+
+#### Fix And Side-Effect Check
+
+Pending. No application code has been changed for Issue 1.
