@@ -2,7 +2,9 @@
 
 ## AI Usage
 
-I used AI during Milestone 1 to help inventory the repository, summarize file responsibilities, trace route-to-service data flows, run the documented setup commands, and interpret the untouched baseline test failures. I independently verified the map by reading the source files, running the full test suite, seeding the database, and starting the Flask app with the required app-factory command. No bug fixes were generated or applied during orientation.
+I used AI to help inventory the repository, explain unfamiliar SQLAlchemy and Python syntax, trace each request from its route into the affected service, run tests, and organize the root cause analyses. For Issue 4, AI also helped identify the existing notification pattern and draft focused regression tests for friend-rating and self-rating behavior.
+
+I independently followed each call chain, reviewed the affected functions, and made the three application-code fixes myself after understanding their causes. I verified the changes with targeted tests and the complete test suite. AI suggestions were not treated as proof: Issue 4 was not covered by the starter tests, so I reproduced it separately and added regression coverage, and I asked for step-by-step explanations whenever an initial answer moved faster than my understanding.
 
 ## Codebase Map
 
@@ -44,6 +46,7 @@ The five reported bugs are intentionally concentrated in the service layer, but 
 - `tests/test_streaks.py` defines the expected consecutive-day streak behavior, including the Saturday-to-Sunday boundary.
 - `tests/test_search.py` defines the expectation that a matching song appears only once regardless of tag count.
 - `tests/test_playlists.py` defines the expectation that every playlist song is returned in position order.
+- `tests/test_notifications.py` verifies that rating another user's song notifies its owner while self-rating does not.
 
 Untouched baseline result: 10 tests passed and 3 failed. The failures reproduce the Sunday streak reset and the missing final playlist song. Passing tests do not prove the other reported issues are absent because the starter suite does not cover every issue condition.
 
@@ -55,7 +58,8 @@ Untouched baseline result: 10 tests passed and 3 failed. The failures reproduce 
 2. `routes/songs.py` validates the two required fields and calls `notification_service.rate_song()`.
 3. `rate_song()` validates the score, song, and user; then creates or updates the `Rating` record.
 4. SQLAlchemy commits the change.
-5. The route serializes the returned rating as JSON with HTTP `201`.
+5. If the rater is not the song owner, `rate_song()` creates a `song_rated` notification for the owner.
+6. The route serializes the returned rating as JSON with HTTP `201`.
 
 This flow is relevant to Issue 4 because the public route delegates both rating behavior and any related notification behavior to `notification_service.py`.
 
@@ -90,7 +94,7 @@ This flow is relevant to Issue 4 because the public route delegates both rating 
 4. Playlist additions notify the song owner, but ratings do not.
 5. The last song in a playlist never shows up.
 
-The repository README provides these titles and affected services. Selection remains pending until the complete CodePath issue descriptions are reviewed.
+The repository README provides these titles and affected services. I selected Issues 1, 4, and 5 for investigation and repair.
 
 ## Bug Investigations
 
