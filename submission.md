@@ -118,15 +118,23 @@ This confirms the bug is conditional on the Saturday-to-Sunday transition and ex
 
 #### How I Found the Root Cause
 
-Pending investigation after Milestone 2 reproduction is complete.
+I traced the request from `POST /songs/<song_id>/listen` to `listen()` in `routes/songs.py`. That route calls `record_listening_event()` in `services/streak_service.py`, which records the listen and passes the timestamp to `update_listening_streak()`. I then followed the streak read path from `GET /users/<user_id>/streak` through `streak()` in `routes/users.py` to `get_streak()`, confirming that the endpoint was returning the incorrectly saved value rather than calculating it incorrectly during retrieval.
 
 #### Root Cause
 
-Pending investigation. No diagnosis is recorded yet so reproduction remains separate from fixing.
+In `update_listening_streak()`, the consecutive-day branch required both `days_since_last == 1` and `today.weekday() != 6`. Python represents Sunday as weekday `6`, so a valid Saturday-to-Sunday transition skipped the increment branch and entered the fallback branch, which reset the streak to `1`.
 
 #### Fix And Side-Effect Check
 
-Pending. No application code has been changed for Issue 1.
+I removed the unnecessary Sunday exclusion so every `days_since_last == 1` transition increments the streak. Same-day listens still return without changing the streak, and gaps longer than one day still reset it to `1`.
+
+After the fix, all five streak tests passed:
+
+```powershell
+python -m pytest tests/test_streaks.py -q
+```
+
+The full suite produced `11 passed, 2 failed`. Both remaining failures are the previously reproduced Issue 5 playlist bug, so the streak fix introduced no new test regressions.
 
 ### Issue 4: Rating A Friend's Song Does Not Notify Them
 
