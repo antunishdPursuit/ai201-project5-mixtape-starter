@@ -79,8 +79,8 @@ This flow is relevant to Issue 4 because the public route delegates both rating 
 - [x] Started the app with `flask --app app:create_app run` and verified a live endpoint.
 - [x] Read the README, models, routes, services, and tests.
 - [x] Recorded the untouched baseline test result.
-- [ ] Read the full five issue descriptions in the CodePath project brief.
-- [ ] Choose at least three bugs to reproduce in Milestone 2.
+- [x] Reviewed all five reported issues and the CodePath reproduction hints.
+- [x] Chose Issues 1, 4, and 5 for Milestone 2.
 
 ## Five Reported Issues
 
@@ -156,3 +156,38 @@ Pending investigation. The successful rating and missing notification establish 
 #### Fix And Side-Effect Check
 
 Pending. No application code has been changed for Issue 4.
+
+### Issue 5: The Last Song In A Playlist Never Shows Up
+
+#### How I Reproduced It
+
+I ran the two existing playlist regression tests against the untouched starter code:
+
+```powershell
+python -m pytest tests/test_playlists.py::test_playlist_returns_all_songs tests/test_playlists.py::test_playlist_returns_songs_in_order -v
+```
+
+Both tests failed. A playlist containing five stored songs returned only four, and the ordered title list ended at `Track 4` instead of including `Track 5`.
+
+I independently created an in-memory playlist with five songs at positions 1 through 5 and called `get_playlist_songs()` directly. The result was:
+
+```text
+Stored songs: 5
+Returned songs: 4
+Returned titles: ['Track 1', 'Track 2', 'Track 3', 'Track 4']
+Missing title: Track 5
+```
+
+This confirms that the database contains the fifth song and the loss occurs during playlist retrieval, not during insertion. No fix code was applied during reproduction.
+
+#### How I Found the Root Cause
+
+Pending investigation after Milestone 2 reproduction is complete.
+
+#### Root Cause
+
+Pending investigation. The evidence narrows the failure to retrieval but does not yet record the specific cause.
+
+#### Fix And Side-Effect Check
+
+Pending. No application code has been changed for Issue 5.
