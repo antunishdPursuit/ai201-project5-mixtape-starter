@@ -127,3 +127,32 @@ Pending investigation. No diagnosis is recorded yet so reproduction remains sepa
 #### Fix And Side-Effect Check
 
 Pending. No application code has been changed for Issue 1.
+
+### Issue 4: Rating A Friend's Song Does Not Notify Them
+
+#### How I Reproduced It
+
+I created two users in an isolated in-memory database: one user shared a song and a different user rated it. I submitted the rating through the real `POST /songs/<song_id>/rate` route, then retrieved the original sharer's notifications through `GET /users/<owner_id>/notifications`.
+
+The rating request succeeded and the database contained the expected `Rating` record, but the song owner had no notification:
+
+```text
+Rating status: 201
+Saved ratings: 1
+Owner notifications: 0
+Expected notifications: 1
+```
+
+This separates the two behaviors: rating persistence works, while the notification side effect is missing. The evidence was collected before changing any application code.
+
+#### How I Found the Root Cause
+
+Pending investigation after Milestone 2 reproduction is complete.
+
+#### Root Cause
+
+Pending investigation. The successful rating and missing notification establish the symptom but do not yet document the cause.
+
+#### Fix And Side-Effect Check
+
+Pending. No application code has been changed for Issue 4.
