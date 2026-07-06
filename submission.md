@@ -198,12 +198,20 @@ This confirms that the database contains the fifth song and the loss occurs duri
 
 #### How I Found the Root Cause
 
-Pending investigation after Milestone 2 reproduction is complete.
+I traced `GET /playlists/<playlist_id>/songs` to `get_songs()` in `routes/playlists.py`, which calls `get_playlist_songs()` in `services/playlist_service.py`. The service verifies that the playlist exists, joins `Song` with `playlist_entries`, filters by the requested playlist ID, orders the rows by their stored position, and retrieves all matches with `.all()`. I then followed the returned list to the final list comprehension, where it was sliced before serialization.
 
 #### Root Cause
 
-Pending investigation. The evidence narrows the failure to retrieval but does not yet record the specific cause.
+The database query correctly returned all five ordered songs, but the return statement iterated over `songs[:-1]`. In Python, `[:-1]` creates a list containing every item except the last one, so `Track 5` was discarded after retrieval and before the route constructed its response.
 
 #### Fix And Side-Effect Check
 
-Pending. No application code has been changed for Issue 5.
+I removed the `[:-1]` slice so the list comprehension serializes every song returned by the ordered query.
+
+All three playlist tests passed, confirming that all songs are returned, their position order is preserved, and an empty playlist still returns an empty list:
+
+```powershell
+python -m pytest tests/test_playlists.py -v
+```
+
+The complete test suite passed with `15 passed`, so the playlist fix introduced no regressions in the streak, search, rating, or notification behavior.
