@@ -155,15 +155,23 @@ This separates the two behaviors: rating persistence works, while the notificati
 
 #### How I Found the Root Cause
 
-Pending investigation after Milestone 2 reproduction is complete.
+I traced `POST /songs/<song_id>/rate` to `rate()` in `routes/songs.py`, which validates the request and calls `rate_song()` in `services/notification_service.py`. Inside `rate_song()`, the song and rater are loaded, and the code either updates an existing `Rating` or adds a new one before committing it. I compared this flow with `add_to_playlist()` in the same service, which calls `create_notification()` after another user interacts with a shared song.
 
 #### Root Cause
 
-Pending investigation. The successful rating and missing notification establish the symptom but do not yet document the cause.
+The rating path committed and returned the `Rating`, but it never called `create_notification()`. The notification model, helper, retrieval route, song owner, and rater information were all available; the connection between the successful rating and the notification side effect was missing.
 
 #### Fix And Side-Effect Check
 
-Pending. No application code has been changed for Issue 4.
+After committing the rating, I added a call to `create_notification()` that sends the song owner a `song_rated` notification containing the rater's username, song title, and score. The call is guarded by `song.shared_by != user_id`, so users do not receive notifications for rating their own songs. It applies to both new and updated ratings because it runs after the create-or-update branch.
+
+I added two regression tests in `tests/test_notifications.py`: one confirms that rating another user's song notifies its owner, and the other confirms that self-rating does not create a notification. Both tests passed:
+
+```powershell
+python -m pytest tests/test_notifications.py -v
+```
+
+The full suite produced `13 passed, 2 failed`. Both remaining failures are the previously reproduced Issue 5 playlist bug, so the notification change introduced no new test regressions.
 
 ### Issue 5: The Last Song In A Playlist Never Shows Up
 
