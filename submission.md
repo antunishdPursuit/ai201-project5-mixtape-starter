@@ -219,3 +219,7 @@ python -m pytest tests/test_playlists.py -v
 ```
 
 The complete test suite passed with `15 passed`, so the playlist fix introduced no regressions in the streak, search, rating, or notification behavior.
+
+## Git Log Screenshot
+
+![Git log showing separate bug-fix commits](<git log bugfix.png>)
